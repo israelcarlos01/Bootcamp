@@ -37,6 +37,17 @@ function checkUserExists(req, res, next) {
   return next();
 }
 
+function checkUserInArray(req, res, next) {
+  const user = users[req.params.index];
+
+  if (!user) {
+    return res.status(400).json({ error: "User does not exist" });
+  }
+  req.user = user;
+
+  return next();
+}
+
 //Route for creation to CRUD =)
 server.get("/users", (req, res) => {
   return res.json(users);
@@ -48,16 +59,15 @@ server.get("/teste", (req, res) => {
 });
 //Exemplo Rout params
 //index é a posição do array que esta armazenada a informação
-server.get("/users/:index", (req, res) => {
-  const { index } = req.params;
-  return res.json(users[index]);
+server.get("/users/:index", checkUserInArray, (req, res) => {
+  return res.json(req.user);
 });
 server.post("/users", checkUserExists, (req, res) => {
   const { name } = req.body;
   users.push(name);
   return res.json(users);
 });
-server.put("/users/:index", checkUserExists, (req, res) => {
+server.put("/users/:index", checkUserInArray, checkUserExists, (req, res) => {
   const { index } = req.params;
   const { name } = req.body;
 
@@ -65,7 +75,7 @@ server.put("/users/:index", checkUserExists, (req, res) => {
   return res.json(users);
 });
 
-server.delete("/users/:index", (req, res) => {
+server.delete("/users/:index", checkUserInArray, (req, res) => {
   const { index } = req.params;
 
   /*o metodo splice vai percorrer o vetor, chegando no 
